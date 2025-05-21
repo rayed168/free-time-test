@@ -2,70 +2,49 @@ import pygame
 import random
 
 pygame.init()
-WIDTH, HEIGHT = 640, 480
+WIDTH, HEIGHT = 600, 400
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption("Snake Game")
-
+pygame.display.set_caption("Catch the Square!")
 WHITE = (255, 255, 255)
-GREEN = (0, 200, 0)
-RED = (200, 0, 0)
-BLACK = (0, 0, 0)
-
-cell_size = 20
-snake = [(WIDTH // 2, HEIGHT // 2)]
-direction = (cell_size, 0)
-food = (random.randrange(0, WIDTH, cell_size), random.randrange(0, HEIGHT, cell_size))
+RED = (255, 0, 0)
+BLUE = (0, 0, 255)
+player_size = 50
+player_x = WIDTH // 2 - player_size // 2
+player_y = HEIGHT - player_size - 10
+player_speed = 5
+square_size = 30
+square_x = random.randint(0, WIDTH - square_size)
+square_y = 0
+square_speed = 3
 score = 0
-font = pygame.font.SysFont("Arial", 30)
+font = pygame.font.SysFont(None, 36)
 clock = pygame.time.Clock()
 running = True
 
-def move_snake(snake, direction):
-    head = (snake[0][0] + direction[0], snake[0][1] + direction[1])
-    return [head] + snake[:-1]
-
-def grow_snake(snake, direction):
-    head = (snake[0][0] + direction[0], snake[0][1] + direction[1])
-    return [head] + snake
-
 while running:
+    screen.fill(WHITE)
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
-        elif event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_UP and direction != (0, cell_size):
-                direction = (0, -cell_size)
-            elif event.key == pygame.K_DOWN and direction != (0, -cell_size):
-                direction = (0, cell_size)
-            elif event.key == pygame.K_LEFT and direction != (cell_size, 0):
-                direction = (-cell_size, 0)
-            elif event.key == pygame.K_RIGHT and direction != (-cell_size, 0):
-                direction = (cell_size, 0)
-
-    next_head = (snake[0][0] + direction[0], snake[0][1] + direction[1])
-
-    if (next_head[0] < 0 or next_head[0] >= WIDTH or
-        next_head[1] < 0 or next_head[1] >= HEIGHT or
-        next_head in snake):
-        running = False
-
-    if next_head == food:
-        snake = grow_snake(snake, direction)
+    keys = pygame.key.get_pressed()
+    if keys[pygame.K_LEFT] and player_x > 0:
+        player_x -= player_speed
+    if keys[pygame.K_RIGHT] and player_x < WIDTH - player_size:
+        player_x += player_speed
+    square_y += square_speed
+    player_rect = pygame.Rect(player_x, player_y, player_size, player_size)
+    square_rect = pygame.Rect(square_x, square_y, square_size, square_size)
+    if player_rect.colliderect(square_rect):
         score += 1
-        while True:
-            food = (random.randrange(0, WIDTH, cell_size), random.randrange(0, HEIGHT, cell_size))
-            if food not in snake:
-                break
-    else:
-        snake = move_snake(snake, direction)
-
-    screen.fill(WHITE)
-    for segment in snake:
-        pygame.draw.rect(screen, GREEN, (*segment, cell_size, cell_size))
-    pygame.draw.rect(screen, RED, (*food, cell_size, cell_size))
-
-    score_text = font.render(f"Score: {score}", True, BLACK)
+        square_x = random.randint(0, WIDTH - square_size)
+        square_y = 0
+    if square_y > HEIGHT:
+        square_x = random.randint(0, WIDTH - square_size)
+        square_y = 0
+    pygame.draw.rect(screen, BLUE, player_rect)
+    pygame.draw.rect(screen, RED, square_rect)
+    score_text = font.render(f"Score: {score}", True, (0, 0, 0))
     screen.blit(score_text, (10, 10))
     pygame.display.flip()
-    clock.tick(10)
+    clock.tick(60)
 pygame.quit()
